@@ -34,6 +34,13 @@ async function slidingWindowRateLimiter (req,res,next){
             return res.status(429).json({message:'Rate limit exceeded'});
         }
 
+        const remaining= MAX_REQUESTS-totalRequests-1; //-1 since the curr req not processed yet
+
+        res.locals.remaining = remaining>=0? remaining:0;
+
+        res.set('X-RateLimit-Limit', MAX_REQUESTS);
+        res.set('X-RateLimit-Remaining', remaining>=0? remaining:0);
+
         //if not exceede increment count of curr bucket
         await redisClient.hIncrBy(key, String(currentBucket),1);
 
